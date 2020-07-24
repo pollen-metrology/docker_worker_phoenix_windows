@@ -12,9 +12,9 @@ function startUp() {
   --tag-list "phoenix-windows-test, pyphoenix-windows-test" `
   --cache-type "s3" `
   --cache-shared=true `
-  --cache-s3-server-address $env:KUBERNETES_RUNNER_CACHE_SERVER_ADDRESS `
-  --cache-s3-access-key $env:KUBERNETES_RUNNER_CACHE_ACCESS_KEY `
-  --cache-s3-secret-key $env:KUBERNETES_RUNNER_CACHE_SECRET_KEY `
+  --cache-s3-server-address $env:KUBERNETES_RUNNER_CACHE_SERVER_ADDRESS.trim("") `
+  --cache-s3-access-key $env:KUBERNETES_RUNNER_CACHE_ACCESS_KEY.trim("") `
+  --cache-s3-secret-key $env:KUBERNETES_RUNNER_CACHE_SECRET_KEY.trim("") `
   --cache-s3-bucket-name "runner" `
   --run-untagged="true" `
   --locked="false"
