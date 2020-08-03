@@ -27,7 +27,6 @@ function shutDown() {
   c:\GitLab-Runner\.\gitlab-runner.exe unregister --all-runners
 }
 
-
 try
 {
   # startup 
@@ -41,6 +40,6 @@ try
 }
 finally
 {
-  # when dthe docker stopped
+  # when the docker stopped
   shutDown
 }  
