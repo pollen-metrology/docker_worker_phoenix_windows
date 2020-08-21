@@ -17,9 +17,10 @@ function startUp() {
   --cache-s3-secret-key $env:KUBERNETES_RUNNER_CACHE_SECRET_KEY.trim("") `
   --cache-s3-bucket-name "runner" `
   --run-untagged="true" `
+  --limit=1 `
   --locked="false"
-  
-   c:\GitLab-Runner\.\gitlab-runner.exe run
+   # Disable run else windows launch two gitlab-runner process
+   #c:\GitLab-Runner\.\gitlab-runner.exe run
 }
 
 function shutDown() {
