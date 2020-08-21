@@ -1,8 +1,8 @@
-# docker build -t pollenm/docker_worker_phoenix_windows_test .
-# docker run --dns=8.8.8.8 -it pollenm/docker_worker_phoenix_windows_test
-# docker run --user "NT AUTHORITY\SYSTEM" -it pollenm/docker_worker_phoenix_windows_test
+# docker build -t pollenm/docker_worker_phoenix_windows .
+# docker run --dns=8.8.8.8 -it pollenm/docker_worker_phoenix_windows
+# docker run --user "NT AUTHORITY\SYSTEM" -it pollenm/docker_worker_phoenix_windows
 # push to github
-# push to docker-hub => docker push pollenm/docker_worker_phoenix_windows_test
+# push to docker-hub => docker push pollenm/docker_worker_phoenix_windows
 
 # CONTENT FOR BUILD
 #----------------------------------------------------------------------------------------------------------------------#
