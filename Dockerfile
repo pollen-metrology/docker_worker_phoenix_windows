@@ -107,12 +107,18 @@ RUN powershell -Command \
 
 # --------------------------------------------- DOXYGEN ----------------------------------------------- #
 FROM pollen_step_python as pollen_step_doxygen
-RUN powershell -Command scoop install doxygen --global;
+# RUN powershell -Command scoop install doxygen --global;
+COPY tools/doxygen-1.8.18.windows.bin.zip c:\\TEMP\\doxygen-1.8.18.windows.bin.zip
+RUN powershell -Command Expand-Archive -LiteralPath "c:\TEMP\doxygen-1.8.18.windows.bin.zip" -DestinationPath "%ProgramData%\doxygen"
+RUN setx path "%path%;%ProgramData%\doxygen"
 # ----------------------------------------------------------------------------------------------------- # 
 
 # --------------------------------------------- GRAPHVIZ ---------------------------------------------- #
 FROM pollen_step_doxygen as pollen_step_graphiz
-RUN powershell -Command scoop install graphviz --global;
+#RUN powershell -Command scoop install graphviz --global;
+COPY tools/graphviz-2.38.zip c:\\TEMP\\graphviz-2.38.zip
+RUN powershell -Command Expand-Archive -LiteralPath "C:\TEMP\graphviz-2.38.zip" -DestinationPath "%ProgramData%\graphviz"
+RUN setx path "%path%;%ProgramData%\graphviz\release\bin"
 # ----------------------------------------------------------------------------------------------------- # 
 
 # --------------------------------------------- CMAKE ------------------------------------------------- #
