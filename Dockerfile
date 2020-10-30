@@ -81,10 +81,10 @@ RUN powershell -Command \
 	.\bootstrap-vcpkg.bat -disableMetrics;
 ### Install Phoenix dependencies via vcpkg
 RUN powershell -Command \
-	.\vcpkg\vcpkg.exe install --overlay-ports=C:\extra-vcpkg-ports\ --triplet x64-windows-static --clean-after-build boost-core boost-math boost-crc boost-random boost-format boost-stacktrace cereal vxl opencv3[core,contrib,tiff,png,jpeg] eigen3 gtest boost-geometry
+	.\vcpkg\vcpkg.exe install --overlay-ports=C:\extra-vcpkg-ports\ --triplet x64-windows-static --clean-after-build boost-core boost-math boost-crc boost-random boost-format boost-stacktrace cereal vxl opencv3[core,contrib,tiff,png,jpeg] eigen3 gtest boost-geometry nlopt
 COPY vcpkg/triplets/x64-windows-static-dynamic-v140.cmake c:\\vcpkg\\triplets
 RUN powershell -Command \
-	.\vcpkg\vcpkg.exe install --overlay-ports=C:\extra-vcpkg-ports\ --triplet x64-windows-static-dynamic-v140 --clean-after-build boost-core boost-math boost-crc boost-random boost-format boost-stacktrace cereal vxl opencv3[core,contrib,tiff,png,jpeg] eigen3 gtest boost-geometry
+	.\vcpkg\vcpkg.exe install --overlay-ports=C:\extra-vcpkg-ports\ --triplet x64-windows-static-dynamic-v140 --clean-after-build boost-core boost-math boost-crc boost-random boost-format boost-stacktrace cereal vxl opencv3[core,contrib,tiff,png,jpeg] eigen3 gtest boost-geometry nlopt
 # ----------------------------------------------------------------------------------------------------- #
 
 # --------------------------------------------- CLEANUP ----------------------------------------------- #
@@ -110,7 +110,7 @@ FROM pollen_step_python as pollen_step_doxygen
 # RUN powershell -Command scoop install doxygen --global;
 COPY tools/doxygen-1.8.18.windows.bin.zip c:\\TEMP\\doxygen-1.8.18.windows.bin.zip
 RUN powershell -Command Expand-Archive -LiteralPath "c:\TEMP\doxygen-1.8.18.windows.bin.zip" -DestinationPath "%ProgramData%\doxygen"
-RUN setx path "%path%;%ProgramData%\doxygen"
+#RUN setx path "%path%;%ProgramData%\doxygen"
 # ----------------------------------------------------------------------------------------------------- # 
 
 # --------------------------------------------- GRAPHVIZ ---------------------------------------------- #
@@ -118,7 +118,7 @@ FROM pollen_step_doxygen as pollen_step_graphiz
 #RUN powershell -Command scoop install graphviz --global;
 COPY tools/graphviz-2.38.zip c:\\TEMP\\graphviz-2.38.zip
 RUN powershell -Command Expand-Archive -LiteralPath "C:\TEMP\graphviz-2.38.zip" -DestinationPath "%ProgramData%\graphviz"
-RUN setx path "%path%;%ProgramData%\graphviz\release\bin"
+#RUN setx path "%path%;%ProgramData%\graphviz\release\bin"
 # ----------------------------------------------------------------------------------------------------- # 
 
 # --------------------------------------------- CMAKE ------------------------------------------------- #
@@ -154,6 +154,11 @@ FROM pollen_step_copy_missing_dll as pollen_step_entrypoint
 COPY run.ps1 c:
 
 # RUN powershell -Command "$env:Path += ';c:\Users\gitlab\scoop\shims\'"
+
+USER ContainerAdministrator
+RUN setx /M PATH "%PATH%;C:/ProgramData/doxygen"
+RUN setx /M PATH "%PATH%;C:\ProgramData\graphviz\release\bin"
+USER gitlab
 
 ENTRYPOINT [ "powershell.exe", "C:\\.\\run.ps1" ]
 # --------------------------------------------------------------------------------------------------------- #
