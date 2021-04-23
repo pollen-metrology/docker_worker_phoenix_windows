@@ -169,8 +169,6 @@ RUN powershell -Command Expand-Archive -LiteralPath c:\\tmp\libtorch-win-shared-
 FROM pollen_step_intel_mkl as pollen_step_entrypoint
 COPY run.ps1 c:
 
-# RUN powershell -Command "$env:Path += ';c:\Users\gitlab\scoop\shims\'"
-
 USER ContainerAdministrator
 RUN setx /M PATH "%PATH%;C:/ProgramData/doxygen"
 RUN setx /M PATH "%PATH%;C:\ProgramData\graphviz\release\bin"
