@@ -81,10 +81,10 @@ RUN powershell -Command \
 	.\bootstrap-vcpkg.bat -disableMetrics;
 ### Install Phoenix dependencies via vcpkg
 RUN powershell -Command \
-	.\vcpkg\vcpkg.exe install --overlay-ports=C:\extra-vcpkg-ports\ --triplet x64-windows-static --clean-after-build boost-core boost-math boost-crc boost-random boost-format boost-stacktrace cereal vxl opencv3[core,contrib,tiff,png,jpeg] eigen3 gtest boost-geometry nlopt
+	.\vcpkg\vcpkg.exe install --overlay-ports=C:\extra-vcpkg-ports\ --triplet x64-windows-static --clean-after-build boost-core boost-math boost-crc boost-random boost-format boost-stacktrace cereal vxl opencv3[core,contrib,tiff,png,jpeg] eigen3 gtest boost-geometry nlopt protobuf
 COPY vcpkg/triplets/x64-windows-static-dynamic-v140.cmake c:\\vcpkg\\triplets
 RUN powershell -Command \
-	.\vcpkg\vcpkg.exe install --overlay-ports=C:\extra-vcpkg-ports\ --triplet x64-windows-static-dynamic-v140 --clean-after-build boost-core boost-math boost-crc boost-random boost-format boost-stacktrace cereal vxl opencv3[core,contrib,tiff,png,jpeg] eigen3 gtest boost-geometry nlopt
+	.\vcpkg\vcpkg.exe install --overlay-ports=C:\extra-vcpkg-ports\ --triplet x64-windows-static-dynamic-v140 --clean-after-build boost-core boost-math boost-crc boost-random boost-format boost-stacktrace cereal vxl opencv3[core,contrib,tiff,png,jpeg] eigen3 gtest boost-geometry nlopt protobuf
 # ----------------------------------------------------------------------------------------------------- #
 
 # --------------------------------------------- CLEANUP ----------------------------------------------- #
@@ -149,11 +149,25 @@ COPY dlls/opengl32.dll c:\\Windows\\System32\\opengl32.dll
 COPY dlls/glu32.dll c:\\Windows\\System32\\glu32.dll
 # ----------------------------------------------------------------------------------------------------- # 
 
-# --------------------------------------------- ENTRYPOINT ------------------------------------------------ #
-FROM pollen_step_copy_missing_dll as pollen_step_entrypoint
-COPY run.ps1 c:
+FROM pollen_step_copy_missing_dll as pollen_step_intel_mkl
+# install Intel oneAPI MATH Kernel Library
+# nuget install inteltbb.devel.win -Version 2021.1.1.133
+# pip install inteltbb.devel.win==2021.1.1.133
+#
+RUN pip install mkl_include==2021.1.1
+RUN pip install tbb==2021.1.1
+# pytorch 1.7.1 / libtorch / c++/java / None (https://pytorch.org/get-started/locally/)
+# Copy debug DLL to c:\windows\system32
+RUN mkdir c:\\tmp
+RUN curl -fSLo c:\\tmp\\libtorch-win-shared-with-deps-1.7.1%2Bcpu.zip https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-1.7.1%2Bcpu.zip
+RUN powershell -Command Expand-Archive -LiteralPath C:\\tmp\libtorch-win-shared-with-deps-1.7.1%2Bcpu.zip -DestinationPath c:\\tmp\libtorch_release
 
-# RUN powershell -Command "$env:Path += ';c:\Users\gitlab\scoop\shims\'"
+RUN curl -fSLo c:\\tmp\libtorch-win-shared-with-deps-debug-1.7.1%2Bcpu.zip https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-debug-1.7.1%2Bcpu.zip
+RUN powershell -Command Expand-Archive -LiteralPath c:\\tmp\libtorch-win-shared-with-deps-debug-1.7.1%2Bcpu.zip c:\\tmp\libtorch_debug
+
+# --------------------------------------------- ENTRYPOINT ------------------------------------------------ #
+FROM pollen_step_intel_mkl as pollen_step_entrypoint
+COPY run.ps1 c:
 
 USER ContainerAdministrator
 RUN setx /M PATH "%PATH%;C:/ProgramData/doxygen"
