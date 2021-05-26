@@ -39,15 +39,31 @@ RUN powershell -Command \
 # --global 
 RUN @"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
 RUN choco install git -y    
+RUN git lfs install
 # ----------------------------------------------------------------------------------------------------- #    
 
 # --------------------------------------------- VS2015 ------------------------------------------------ #
 FROM pollen_step_scoop_choco_git as pollen_step_vs2015
- RUN \
+### RUN \
     # Install VS Build Tools 2015
-    powershell.exe Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')) \
-    && choco install -y --no-progress visualcpp-build-tools --version=14.0.25420.1 \
-    && choco install -y --no-progress vcbuildtools --version=2015.2
+###    powershell.exe Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')) \
+###    && choco install -y --no-progress visualcpp-build-tools --version=14.0.25420.1 \
+###    && choco install -y --no-progress vcbuildtools --version=2015.2
+
+# Generate Full Visual Cpp Build Tools
+# Copy /tools/visualcppbuildtools_full.exe in a folder
+# Mount Visual Studio 2015 Iso "en_visual_studio_community_2015_with_update_3_x86_x64_dvd_8923300.iso" to D:
+# Launch the command "visualcppbuildtools_full.exe /layout"
+# Select a download folder to generate in the full installation
+# BuildTools_MSBuild.msi is not found, select it in the mounted lector D: => D:\packages\BuildTools_MSBuild_amd64\BuildTools_MSBuild.msi
+# Copy all the files in vcbuildtoolsfull2015.zip
+# P:\Development environment\Tools not in development environment\visual_studio\VisualCppBuildToolsFull2015\vcbuildtoolsfull2015.zip
+COPY tools/vcbuildtoolsfull2015.zip c:\\TEMP\\vcbuildtoolsfull2015.zip
+RUN powershell -Command Expand-Archive -LiteralPath 'C:\TEMP\vcbuildtoolsfull2015.zip' -DestinationPath 'C:\TEMP\vcbuildtoolsfull2015'
+RUN powershell -Command "c:\TEMP\vcbuildtoolsfull2015\VisualCppBuildTools_Full.exe" /NoRefresh /NoRestart /NoWeb /Passive /Quiet
+
+#RUN powershell -Command "c:\TEMP\visualcppbuildtools_full.exe" /quiet /NoRestart
+#RUN cmd /c c:\TEMP\visualcppbuildtools_full.exe /Passive
 # ----------------------------------------------------------------------------------------------------- #
 
 # --------------------------------------------- VS2019 ------------------------------------------------ #
@@ -82,19 +98,26 @@ RUN powershell -Command \
 ### Install Phoenix dependencies via vcpkg
 RUN powershell -Command \
 	.\vcpkg\vcpkg.exe install --overlay-ports=C:\extra-vcpkg-ports\ --triplet x64-windows-static --clean-after-build boost-core boost-math boost-crc boost-random boost-format boost-stacktrace cereal vxl opencv3[core,contrib,tiff,png,jpeg] eigen3 gtest boost-geometry nlopt protobuf
+#
 COPY vcpkg/triplets/x64-windows-static-dynamic-v140.cmake c:\\vcpkg\\triplets
 RUN powershell -Command \
 	.\vcpkg\vcpkg.exe install --overlay-ports=C:\extra-vcpkg-ports\ --triplet x64-windows-static-dynamic-v140 --clean-after-build boost-core boost-math boost-crc boost-random boost-format boost-stacktrace cereal vxl opencv3[core,contrib,tiff,png,jpeg] eigen3 gtest boost-geometry nlopt protobuf
+#
+COPY vcpkg/triplets/x64-windows-static-dynamic-v142.cmake c:\\vcpkg\\triplets
+RUN powershell -Command \
+	.\vcpkg\vcpkg.exe install --overlay-ports=C:\extra-vcpkg-ports\ --triplet x64-windows-static-dynamic-v142 --clean-after-build boost-core boost-math boost-crc boost-random boost-format boost-stacktrace cereal vxl opencv3[core,contrib,tiff,png,jpeg] eigen3 gtest boost-geometry nlopt protobuf
 # ----------------------------------------------------------------------------------------------------- #
 
 # --------------------------------------------- CLEANUP ----------------------------------------------- #
 FROM pollen_step_vcpkg as pollen_step_cleanup
 RUN powershell -Command choco install -y choco-cleaner
 RUN powershell -Command choco-cleaner
-RUN \
-    #Cleanup
-    powershell Remove-Item -Force -Recurse "%TEMP%\*" \
-    && rmdir /S /Q "%ProgramData%\Package Cache"
+#RUN \
+#    #Cleanup
+#    powershell Remove-Item -Force -Recurse "%TEMP%\*" \
+#    && rmdir /S /Q "%ProgramData%\Package Cache"
+RUN powershell -Command Remove-Item -Recurse -Force 'C:\TEMP\vcbuildtoolsfull2015.zip'
+RUN powershell -Command Remove-Item -Recurse -Force  'C:\TEMP\vcbuildtoolsfull2015'
 # ----------------------------------------------------------------------------------------------------- # 
 
 # --------------------------------------------- PYTHON ------------------------------------------------ #
@@ -123,7 +146,12 @@ RUN powershell -Command Expand-Archive -LiteralPath "C:\TEMP\graphviz-2.38.zip" 
 
 # --------------------------------------------- CMAKE ------------------------------------------------- #
 FROM pollen_step_graphiz as pollen_step_cmake
-RUN powershell -Command scoop install cmake@3.18.0 --global;
+#RUN powershell -Command scoop install cmake@3.18.0 --global;
+#RUN powershell -Command scoop install cmake --global;
+# https://github.com/Kitware/CMake/releases/download/v3.18.0/cmake-3.18.0.tar.gz
+COPY tools/cmake-3.18.5-win64-x64.zip c:\\TEMP\\cmake-3.18.5-win64-x64.zip
+RUN powershell -Command Expand-Archive -LiteralPath "C:\TEMP\cmake-3.18.5-win64-x64.zip" -DestinationPath "%ProgramData%\cmake-3.18.5"
+#RUN setx /M PATH "%PATH%;C:\ProgramData\cmake-3.18.5\bin"
 # ----------------------------------------------------------------------------------------------------- # 
 
 # --------------------------------------------- CONAN ------------------------------------------------ #
@@ -172,6 +200,7 @@ COPY run.ps1 c:
 USER ContainerAdministrator
 RUN setx /M PATH "%PATH%;C:/ProgramData/doxygen"
 RUN setx /M PATH "%PATH%;C:\ProgramData\graphviz\release\bin"
+RUN setx /M PATH "%PATH%;C:\ProgramData\cmake-3.18.5\cmake-3.18.5-win64-x64\bin"
 USER gitlab
 
 ENTRYPOINT [ "powershell.exe", "C:\\.\\run.ps1" ]
