@@ -149,8 +149,10 @@ FROM pollen_step_graphiz as pollen_step_cmake
 #RUN powershell -Command scoop install cmake@3.18.0 --global;
 #RUN powershell -Command scoop install cmake --global;
 # https://github.com/Kitware/CMake/releases/download/v3.18.0/cmake-3.18.0.tar.gz
-COPY tools/cmake-3.18.5-win64-x64.zip c:\\TEMP\\cmake-3.18.5-win64-x64.zip
-RUN powershell -Command Expand-Archive -LiteralPath "C:\TEMP\cmake-3.18.5-win64-x64.zip" -DestinationPath "%ProgramData%\cmake-3.18.5"
+#COPY tools/cmake-3.18.5-win64-x64.zip c:\\TEMP\\cmake-3.18.5-win64-x64.zip
+COPY tools/cmake-3.20.5-windows-x86_64.zip c:\\TEMP\\cmake-3.20.5-windows-x86_64.zip
+#RUN powershell -Command Expand-Archive -LiteralPath "C:\TEMP\cmake-3.18.5-win64-x64.zip" -DestinationPath "%ProgramData%\cmake-3.18.5"
+RUN powershell -Command Expand-Archive -LiteralPath "C:\TEMP\cmake-3.20.5-windows-x86_64.zip" -DestinationPath "%ProgramData%\cmake-3.20.5"
 #RUN setx /M PATH "%PATH%;C:\ProgramData\cmake-3.18.5\bin"
 # ----------------------------------------------------------------------------------------------------- # 
 
@@ -200,7 +202,7 @@ COPY run.ps1 c:
 USER ContainerAdministrator
 RUN setx /M PATH "%PATH%;C:/ProgramData/doxygen"
 RUN setx /M PATH "%PATH%;C:\ProgramData\graphviz\release\bin"
-RUN setx /M PATH "%PATH%;C:\ProgramData\cmake-3.18.5\cmake-3.18.5-win64-x64\bin"
+RUN setx /M PATH "%PATH%;C:\ProgramData\cmake-3.20.5\cmake-3.20.5-windows-x86_64\bin"
 USER gitlab
 
 ENTRYPOINT [ "powershell.exe", "C:\\.\\run.ps1" ]
